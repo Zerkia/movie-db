@@ -15,7 +15,7 @@ export const getImageUrl = (
   path: string | null,
   size: "w200" | "w300" | "w500" | "original" = "w500"
 ) => {
-  if (!path) return "/placeholder-movie.jpg";
+  if (!path) return "/file.svg";
   return `${TMDB_IMAGE_BASE_URL}/${size}${path}`;
 };
 

@@ -29,22 +29,10 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      {/* Header */}
-      <header className="bg-white dark:bg-gray-800 shadow-sm">
-        <div className="container mx-auto px-4 py-6">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-            The Movie Database
-          </h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-2">
-            Discover popular movies and explore their details
-          </p>
-        </div>
-      </header>
-
       {/* Main content */}
       <main className="container mx-auto px-4 py-8">
         <div className="mb-8">
-          <h2 className="text-2xl font-semibold text-gray-900 dark:text-white mb-4">
+          <h2 className="text-2xl font-semibold text-gray-900 dark:text-white mb-4 text-center lg:text-left">
             Popular Movies
           </h2>
 

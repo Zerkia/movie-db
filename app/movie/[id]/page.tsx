@@ -7,7 +7,14 @@ import { MovieDetails } from "@/lib/types";
 import useSWR from "swr";
 import { use } from "react";
 
-const fetcher = (url: string) => fetch(url).then((res) => res.json());
+const fetcher = async (url: string) => {
+  const res = await fetch(url);
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`Request failed ${res.status}: ${text}`);
+  }
+  return res.json();
+};
 
 interface MovieDetailPageProps {
   params: Promise<{
@@ -57,138 +64,128 @@ export default function MovieDetailPage({ params }: MovieDetailPageProps) {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      {/* Back button */}
-      <div className="container mx-auto px-4 py-6">
-        <Link
-          href="/"
-          className="inline-flex items-center text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 transition-colors"
-        >
-          ← Back to Movies
-        </Link>
-      </div>
-
-      {/* Movie hero section */}
-      <div className="relative h-96 md:h-[500px]">
-        <Image
-          src={getImageUrl(movie.backdrop_path, "original")}
-          alt={movie.title}
-          fill
-          className="object-cover"
-          priority
-        />
-        <div className="absolute inset-0 bg-black bg-opacity-50" />
-        <div className="absolute bottom-0 left-0 right-0 p-8">
-          <div className="container mx-auto">
-            <h1 className="text-4xl md:text-6xl font-bold text-white mb-4">
-              {movie.title}
-            </h1>
-            {movie.tagline && (
-              <p className="text-xl text-gray-200 italic mb-4">
-                `{movie.tagline}`
-              </p>
-            )}
-            <div className="flex flex-wrap gap-4 text-white">
-              <span className="bg-yellow-500 px-3 py-1 rounded-full text-sm font-semibold">
-                ⭐ {movie.vote_average.toFixed(1)}
-              </span>
-              <span>
-                {movie.release_date
-                  ? new Date(movie.release_date).getFullYear()
-                  : "N/A"}
-              </span>
-              {movie.runtime && <span>{movie.runtime} min</span>}
-              <span>{movie.vote_count} votes</span>
-            </div>
-          </div>
+      {/* Movie details section */}
+      <div className="relative min-h-screen lg:min-h-[1130px] w-[98%] mx-auto h-full">
+        {/* Background image, fills whole section */}
+        <div className="absolute inset-0 w-full h-full">
+          <Image
+            src={getImageUrl(movie.backdrop_path, "original")}
+            alt={movie.title}
+            fill
+            className="object-cover opacity-25"
+            priority
+            style={{ zIndex: 0 }}
+          />
         </div>
-      </div>
-
-      {/* Movie details */}
-      <div className="container mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Poster */}
-          <div className="lg:col-span-1">
-            <div className="relative aspect-2/3 max-w-sm mx-auto">
-              <Image
-                src={getImageUrl(movie.poster_path, "w500")}
-                alt={movie.title}
-                fill
-                className="object-cover rounded-lg shadow-lg"
-              />
+        {/* Main content: poster + details box */}
+        <div className="container mx-auto px-4 py-50 relative z-10 h-full flex items-center">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-center w-full h-full justify-center">
+            {/* Poster */}
+            <div className="lg:col-span-1 flex justify-center lg:justify-end">
+              <div className="relative aspect-2/3 max-w-sm w-full">
+                <Image
+                  src={getImageUrl(movie.poster_path, "w500")}
+                  alt={movie.title}
+                  fill
+                  className="object-cover rounded-lg shadow-lg"
+                />
+              </div>
             </div>
-          </div>
-
-          {/* Details */}
-          <div className="lg:col-span-2">
-            <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-lg">
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
-                Overview
-              </h2>
-              <p className="text-gray-700 dark:text-gray-300 mb-6 leading-relaxed">
-                {movie.overview}
-              </p>
-
-              {/* Genres */}
-              {movie.genres && movie.genres.length > 0 && (
-                <div className="mb-6">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-                    Genres
-                  </h3>
-                  <div className="flex flex-wrap gap-2">
-                    {movie.genres.map((genre) => (
-                      <span
-                        key={genre.id}
-                        className="bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 px-3 py-1 rounded-full text-sm"
-                      >
-                        {genre.name}
-                      </span>
-                    ))}
-                  </div>
+            {/* Details (blurb box) */}
+            <div className="lg:col-span-2">
+              <div className="rounded-lg p-8">
+                {/* Title & tagline */}
+                <h1 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-1">
+                  {movie.title}
+                </h1>
+                {movie.tagline && (
+                  <p className="text-lg text-gray-600 dark:text-gray-300 italic mb-3">
+                    “{movie.tagline}”
+                  </p>
+                )}
+                {/* Info row: rating, year, runtime, votes */}
+                <div className="flex flex-wrap gap-4 items-center text-gray-900 dark:text-white mb-4">
+                  {typeof movie.vote_average === "number" && (
+                    <span className="bg-yellow-500 px-3 py-1 rounded-full text-sm font-semibold">
+                      ⭐ {movie.vote_average.toFixed(1)}
+                    </span>
+                  )}
+                  <span>
+                    {movie.release_date
+                      ? new Date(movie.release_date).getFullYear()
+                      : "N/A"}
+                  </span>
+                  {movie.runtime && <span>{movie.runtime} min</span>}
+                  <span>{movie.vote_count} votes</span>
                 </div>
-              )}
-
-              {/* Additional info */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                {movie.budget > 0 && (
-                  <div>
-                    <span className="font-semibold text-gray-900 dark:text-white">
-                      Budget:
-                    </span>
-                    <span className="ml-2 text-gray-700 dark:text-gray-300">
-                      ${movie.budget.toLocaleString()}
-                    </span>
+                {/* Overview */}
+                <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2 mt-2">
+                  Overview
+                </h2>
+                <p className="text-gray-700 dark:text-gray-300 mb-6 leading-relaxed">
+                  {movie.overview}
+                </p>
+                {/* Genres */}
+                {movie.genres && movie.genres.length > 0 && (
+                  <div className="mb-6">
+                    <h3 className="text-md font-semibold text-gray-900 dark:text-white mb-2">
+                      Genres
+                    </h3>
+                    <div className="flex flex-wrap gap-2">
+                      {movie.genres.map((genre) => (
+                        <span
+                          key={genre.id}
+                          className="bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 px-3 py-1 rounded-full text-sm"
+                        >
+                          {genre.name}
+                        </span>
+                      ))}
+                    </div>
                   </div>
                 )}
-                {movie.revenue > 0 && (
-                  <div>
-                    <span className="font-semibold text-gray-900 dark:text-white">
-                      Revenue:
-                    </span>
-                    <span className="ml-2 text-gray-700 dark:text-gray-300">
-                      ${movie.revenue.toLocaleString()}
-                    </span>
-                  </div>
-                )}
-                {movie.status && (
-                  <div>
-                    <span className="font-semibold text-gray-900 dark:text-white">
-                      Status:
-                    </span>
-                    <span className="ml-2 text-gray-700 dark:text-gray-300">
-                      {movie.status}
-                    </span>
-                  </div>
-                )}
-                {movie.original_language && (
-                  <div>
-                    <span className="font-semibold text-gray-900 dark:text-white">
-                      Language:
-                    </span>
-                    <span className="ml-2 text-gray-700 dark:text-gray-300">
-                      {movie.original_language.toUpperCase()}
-                    </span>
-                  </div>
-                )}
+                {/* Additional info */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                  {movie.budget > 0 && (
+                    <div>
+                      <span className="font-semibold text-gray-900 dark:text-white">
+                        Budget:
+                      </span>
+                      <span className="ml-2 text-gray-700 dark:text-gray-300">
+                        ${movie.budget.toLocaleString()}
+                      </span>
+                    </div>
+                  )}
+                  {movie.revenue > 0 && (
+                    <div>
+                      <span className="font-semibold text-gray-900 dark:text-white">
+                        Revenue:
+                      </span>
+                      <span className="ml-2 text-gray-700 dark:text-gray-300">
+                        ${movie.revenue.toLocaleString()}
+                      </span>
+                    </div>
+                  )}
+                  {movie.status && (
+                    <div>
+                      <span className="font-semibold text-gray-900 dark:text-white">
+                        Status:
+                      </span>
+                      <span className="ml-2 text-gray-700 dark:text-gray-300">
+                        {movie.status}
+                      </span>
+                    </div>
+                  )}
+                  {movie.original_language && (
+                    <div>
+                      <span className="font-semibold text-gray-900 dark:text-white">
+                        Language:
+                      </span>
+                      <span className="ml-2 text-gray-700 dark:text-gray-300">
+                        {movie.original_language.toUpperCase()}
+                      </span>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>
